@@ -62,7 +62,7 @@ my $OPS = {
         my $r = ($_[0] || 50) / 100.0;
         q(perl -lne'print if rand(0) < ).$r.q(');
     },
-    '$' => sub {
+    '@' => sub {
         q(perl -e'use List::Util qw[shuffle];print for shuffle <STDIN>;');
     },
     'r' => sub {
@@ -182,7 +182,7 @@ my @ops = $expr =~ /(
     m|               #min
     M|               #max
     %[0-9]*|         #sample
-    \$|              #shuffle
+    @|              #shuffle
     r\/.*?\/.*?\/i?g?| #replace
     \/.*?\/i?v?|     #grep
     q|               #quote
