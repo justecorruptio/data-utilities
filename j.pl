@@ -82,12 +82,17 @@ my $OPS = {
     },
     'o' => sub {
         my $cols = $_[0] || 8;
-        q(perl -lane'BEGIN{$c=) .$cols. q(}push @a, @F;
-        while(@a >= $c){
-            @b = ();push @b, shift @a for 1..$c;
-            print join("\t", @b);
+        if ($cols eq '-1') {
+            return q(tr '\n' '\t');
         }
-        END{print join "\t", @a if @a;}');
+        else {
+            q(perl -lane'BEGIN{$c=) .$cols. q(}push @a, @F;
+            while(@a >= $c){
+                @b = ();push @b, shift @a for 1..$c;
+                print join("\t", @b);
+            }
+            END{print join "\t", @a if @a;}');
+        }
     },
     'x' => sub {
         my ($rev, $ps) = $_[0] =~ /(r?)(p?)/;
@@ -187,7 +192,7 @@ my @ops = $expr =~ /(
     \/.*?\/i?v?|     #grep
     q|               #quote
     l|               #less
-    o[0-9]*|         #column
+    o-?[0-9]*|       #column
     xr?p?|           #xxd
     j\[(?:,?[\._a-zA-Z0-9]+)*\]| #json
     \S               #fail
