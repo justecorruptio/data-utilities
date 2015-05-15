@@ -222,7 +222,7 @@ print STDERR "$commands\n" if $verbose;
 my $pid = open(WRITER, '|'.$commands);
 
 for my $line (<STDIN>) {
-    chomp $line;
+    $line =~ s/^\s+|\s+$//g;
     $line = join "\t", split qr/$delim/, $line;
     next unless $line;
     print WRITER "$line\n";
