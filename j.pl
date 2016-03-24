@@ -82,7 +82,7 @@ my $OPS = {
     },
     'o' => sub {
         my $cols = $_[0];
-        if ($cols eq 0) {
+        if ($cols eq "0") {
             return q(tr '\n' '\t');
         }
         else {
@@ -205,7 +205,7 @@ my @ops = $expr =~ /($cmd_re)/gx;
 my @commands = ();
 sub parse_op {
     my ($letter, $argv) = $_[0] =~ /(.)(.*)/;
-    $letter == "?" and die "supported commands:\n$cmd_re";
+    $letter eq '?' and die "supported commands:\n$cmd_re";
     my $func = $OPS->{$letter} or die "unsupported operation: $letter\n";
     return ($letter, $argv, $func);
 }
