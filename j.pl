@@ -81,11 +81,12 @@ my $OPS = {
         'less';
     },
     'o' => sub {
-        my $cols = $_[0] || 8;
-        if ($cols eq '-1') {
+        my $cols = $_[0];
+        if ($cols eq 0) {
             return q(tr '\n' '\t');
         }
         else {
+            $cols ||= 8;
             q(perl -lane'BEGIN{$c=) .$cols. q(}push @a, @F;
             while(@a >= $c){
                 @b = ();push @b, shift @a for 1..$c;
@@ -192,7 +193,7 @@ my @ops = $expr =~ /(
     \/.*?\/i?v?|     #grep
     q|               #quote
     l|               #less
-    o-?[0-9]*|       #column
+    o[0-9]*|         #column
     xr?p?|           #xxd
     j\[(?:,?[\._a-zA-Z0-9]+)*\]| #json
     \S               #fail
