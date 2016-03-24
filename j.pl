@@ -168,16 +168,7 @@ my $output_delim = "\t";
 my $expr = '';
 my $verbose = 0;
 
-GetOptions(
-    'delim|d=s' => \$delim,
-    'output-delim|D=s' => \$output_delim,
-    'expr|e=s' => \$expr,
-    'verbose|v' => \$verbose
-) or die "usage: $0 [--delim=<regex>] <expr>\n";
-
-$expr .= join(' ', @ARGV);
-
-my @ops = $expr =~ /(
+my $cmd_re = <<'HERE_DOC';
     c[-,0-9]*|       #cut
     uc?|             #uniq
     sr?n?[0-9]*|     #sort
@@ -188,7 +179,7 @@ my @ops = $expr =~ /(
     m|               #min
     M|               #max
     %[0-9]*|         #sample
-    @|              #shuffle
+    @|               #shuffle
     r\/.*?\/.*?\/i?g?| #replace
     \/.*?\/i?v?|     #grep
     q|               #quote
@@ -196,12 +187,25 @@ my @ops = $expr =~ /(
     o[0-9]*|         #column
     xr?p?|           #xxd
     j\[(?:,?[\._a-zA-Z0-9]+)*\]| #json
+    \?|              #help
     \S               #fail
-)/gx;
+HERE_DOC
+
+GetOptions(
+    'delim|d=s' => \$delim,
+    'output-delim|D=s' => \$output_delim,
+    'expr|e=s' => \$expr,
+    'verbose|v' => \$verbose
+) or die "usage: $0 [--delim=<regex>] <expr>\n$cmd_re";
+
+$expr .= join(' ', @ARGV);
+
+my @ops = $expr =~ /($cmd_re)/gx;
 
 my @commands = ();
 sub parse_op {
     my ($letter, $argv) = $_[0] =~ /(.)(.*)/;
+    $letter == "?" and die "supported commands:\n$cmd_re";
     my $func = $OPS->{$letter} or die "unsupported operation: $letter\n";
     return ($letter, $argv, $func);
 }
