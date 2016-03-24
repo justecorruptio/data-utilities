@@ -95,6 +95,9 @@ my $OPS = {
             END{print join "\t", @a if @a;}');
         }
     },
+    ',' => sub {
+        q(perl -lpe 's/\t/,/g');
+    },
     'x' => sub {
         my ($rev, $ps) = $_[0] =~ /(r?)(p?)/;
         my $cmd = 'xxd';
@@ -187,6 +190,7 @@ my $cmd_re = <<'HERE_DOC';
     o[0-9]*|         #column
     xr?p?|           #xxd
     j\[(?:,?[\._a-zA-Z0-9]+)*\]| #json
+    ,|               #csv
     \?|              #help
     \S               #fail
 HERE_DOC
@@ -232,4 +236,3 @@ for my $line (<STDIN>) {
     next unless $line;
     print WRITER "$line\n";
 }
-
