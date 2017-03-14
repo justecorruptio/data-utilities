@@ -47,7 +47,6 @@ txt = re.sub(r'\x0d', '', txt)
 txt = re.sub(r'\n{3,}', '\n\n', txt)
 
 txt = HTMLParser.HTMLParser().unescape(txt)
-txt = txt.strip()
 
 def _len(s):
     return len(re.sub('\033\\[.*?m', '', s))
@@ -63,4 +62,5 @@ for row in txt.split('\n'):
         line += ' ' + word
     output += line + '\n'
 
+output = output.strip()
 print output.encode('utf-8')
