@@ -46,7 +46,7 @@ txt = re.sub(r'\n{3,}', '\n\n', txt)
 
 txt = HTMLParser.HTMLParser().unescape(txt)
 
-txt = re.sub(r'<(br|BR)>', '\n', txt)
+txt = re.sub(r'<br>', '\n', txt, flags=re.I)
 
 def _len(s):
     return len(re.sub('\033\\[.*?m', '', s))
