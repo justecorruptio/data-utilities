@@ -44,6 +44,7 @@ txt = re.sub(r'<blockquote>(.*?)</blockquote>',
 txt = re.sub(r'<(br|BR)>', '\n', txt, re.I)
 
 txt = re.sub(r'\x0d', '', txt)
+txt = re.sub(r'\n{3,}', '\n\n', txt)
 
 txt = HTMLParser.HTMLParser().unescape(txt)
 txt = txt.strip()
