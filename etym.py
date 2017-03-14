@@ -41,12 +41,12 @@ txt = re.sub(r'<span class="foreign">(.*?)</span>', '\033[3m\\1\033[23m', txt)
 txt = re.sub(r'<blockquote>(.*?)</blockquote>',
     '\n\n    \033[38;5;244m\\1\033[39m\n\n', txt)
 
-txt = re.sub(r'<(br|BR)>', '\n', txt, re.I)
-
 txt = re.sub(r'\x0d', '', txt)
 txt = re.sub(r'\n{3,}', '\n\n', txt)
 
 txt = HTMLParser.HTMLParser().unescape(txt)
+
+txt = re.sub(r'<(br|BR)>', '\n', txt)
 
 def _len(s):
     return len(re.sub('\033\\[.*?m', '', s))
