@@ -33,13 +33,13 @@ txt = re.sub(r'<!--.*?-->', '', txt)
 txt = re.sub(r'</?(div|dl|p)[^>]*>', '', txt)
 txt = re.sub(r'<img.*?/(img)?>', '', txt)
 txt = re.sub(r'<a [^>]+>', '\033[31m', txt)
-txt = re.sub(r'</a>', '\033[0m', txt)
+txt = re.sub(r'</a>', '\033[39m', txt)
 
 txt = re.sub(r'<dt[^>]*>(.*?)</dt>', r'\1\n', txt)
 txt = re.sub(r'<dd[^>]*>(.*?)</dd>', r'\1\n\n', txt)
-txt = re.sub(r'<span class="foreign">(.*?)</span>', '\033[3m\\1\033[0m', txt)
+txt = re.sub(r'<span class="foreign">(.*?)</span>', '\033[3m\\1\033[23m', txt)
 txt = re.sub(r'<blockquote>(.*?)</blockquote>',
-    '\n\n    \033[38;5;241m\\1\033[0m\n\n', txt)
+    '\n\n    \033[38;5;241m\\1\033[39m\n\n', txt)
 
 txt = re.sub(r'<(br|BR)>', '\n', txt, re.I)
 
