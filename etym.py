@@ -47,6 +47,7 @@ txt = re.sub(r'\n{3,}', '\n\n', txt)
 txt = HTMLParser.HTMLParser().unescape(txt)
 
 txt = re.sub(r'<br>', '\n', txt, flags=re.I)
+txt = re.sub(r' *\n|\n *', '\n', txt)
 
 def _len(s):
     return len(re.sub('\033\\[.*?m', '', s))
@@ -54,13 +55,13 @@ def _len(s):
 output = ''
 for row in txt.split('\n'):
     indent = re.match('^( *)', row).group(1)
-    line = indent
+    line = []
     for word in row.split():
-        if _len(line) + 1 + _len(word) > WIDTH:
-            output += line + '\n'
-            line = indent
-        line += ' ' + word
-    output += line + '\n'
+        if len(indent) + sum(map(_len, line)) + len(line) + _len(word) > WIDTH:
+            output += indent + ' '.join(line) + '\n'
+            line = []
+        line.append(word)
+    output += indent + ' '.join(line) + '\n'
 
 output = output.strip()
 print output.encode('utf-8')
