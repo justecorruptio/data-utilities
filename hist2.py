@@ -29,53 +29,66 @@ def get_window_size():
     return int(int(w) * c_w), int(int(h) * c_h)
 
 
-
 class Plot(object):
-    def __init__(self, data, Z=3):
-        self.w, self.h = map(int, get_cell_size())
+    def __init__(self, N, Z=3, rows=1):
+        w, h = map(int, get_cell_size())
+        h *= rows
+        self.size = (w, h)
         self.Z = Z
-        self.N = len(data)
-        self.M = max(data)
-        self.data = data
+        self.img = Image.new('RGBA', (Z * N, h))
 
-        self.img = Image.new('RGBA', (self.Z * self.N, self.h))
+    def line_plot(self, data, color=(0, 255, 255, 255)):
+        w, h = self.size
+        N = len(data)
+        M = max(data)
+        Z = self.Z
 
-    def line_plot(self):
         line = [
-            (self.Z * i, self.h - int(float(v) / self.M * self.h) - 1)
-            for i, v in enumerate(self.data)
+            (Z * i, h - int(float(v) / M * h) - 1)
+            for i, v in enumerate(data)
         ]
         draw = ImageDraw.Draw(self.img)
-        draw.line(line, fill=(255, 0, 0, 255))
+        draw.line(line, fill=color)
 
-    def bar_plot(self):
+    def bar_plot(self, data, color=None):
+        w, h = self.size
+        N = len(data)
+        M = max(data)
+        Z = self.Z
+
         draw = ImageDraw.Draw(self.img)
-        for i, v in enumerate(self.data):
-            v = float(v) / self.M
-            p = int(v * self.h)
-            c = int(v * 255)
+        for i, v in enumerate(data):
+            v = float(v) / M
+            p = int(v * h)
+
+            if color is None:
+                c = int(v * 255)
+                k = (c, 255 - c, 0, 255)
+            else:
+                k = color
 
             draw.rectangle([
-                (self.Z * i, self.h - 1),
-                (self.Z * i + self.Z - 2, self.h - p - 1),
-            ], fill=(255 - c, c, 0, 255))
+                (Z * i + 1, h - 1),
+                (Z * i + Z - 1, h - p - 1),
+            ], fill=k)
 
     def output(self):
         buff = StringIO.StringIO()
         self.img.save(buff, format='PNG')
 
-        sys.stdout.write('[')
-        sys.stdout.flush()
         sys.stdout.write("\x1b]1337;File=inline=1:%s\a" % (
             base64.b64encode(buff.getvalue()),
         ))
-        sys.stdout.write('\b]\n')
         sys.stdout.flush()
 
-
 import random
+N=100
+#dat = [i for i in xrange(N)]
+dat = [random.random() for i in xrange(N)]
 
-plt = Plot([random.randint(0, 100) for i in xrange(100)])
-#plt.line_plot()
-plt.bar_plot()
+plt = Plot(N, Z=3, rows=1)
+#plt.line_plot(dat)
+plt.bar_plot(dat)
 plt.output()
+
+print ''
