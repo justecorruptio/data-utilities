@@ -1,4 +1,4 @@
-#!/usr/bin/env python -S
+#!/usr/bin/env python -S -u
 
 import argparse
 import os, sys, tty, termios, re
@@ -29,6 +29,7 @@ def get_cell_size():
     termios.tcsetattr(fd, termios.TCSANOW, term_attr)
 
     return float(c_w), float(c_h)
+
 
 def get_window_size():
     c_w, c_h = get_cell_size()
@@ -75,7 +76,7 @@ class PAM(object):
         s = 1 if b < d else -1
 
         j = b
-        for i in xrange(a, c):
+        for i in xrange(a, c + 1):
             if steep:
                 self.data[i * self.w + j] = fill
             else:
@@ -124,7 +125,9 @@ class Plot(object):
         Z = self.Z
 
         line = [
-            (Z * i, h - 1 - int(float(v - m) / M * (h - 1)))
+            (Z * i, h - 1 - (
+                int(float(v - m) / M * (h - 1)) if M else 0
+            ))
             for i, v in enumerate(data)
         ]
         for i in xrange(1, len(line)):
@@ -138,7 +141,10 @@ class Plot(object):
         Z = self.Z
 
         for i, v in enumerate(data):
-            v = float(v - m) / M
+            if M:
+                v = float(v - m) / M
+            else:
+                v = 0
             p = int(v * (h - 1))
 
             if color is None:
@@ -162,7 +168,10 @@ class Plot(object):
         base = h / 2
 
         for i, v in enumerate(data):
-            v = float(v) / M / 2
+            if M:
+                v = float(v) / M / 2
+            else:
+                v = 0
             p = int(v * (h - 1))
             c = int((v + .5) * 255)
 
@@ -180,33 +189,52 @@ class Plot(object):
         sys.stdout.flush()
 
     def wipe(self):
-        sys.stdout.write('\x1b[%dA\x1b[%dD' % (self.rows - 1, self.cols))
+        if self.rows > 1:
+            sys.stdout.write('\x1b[%dA' % (self.rows - 1,))
+        sys.stdout.write('\x1b[%dD' % (self.cols,))
         sys.stdout.flush()
 
 
 def main():
     parser = argparse.ArgumentParser(description='iTerm2 sparkline')
-    parser.add_argument('--num', '-n', type=int, help='samples to show', default=100)
+    parser.add_argument('--num', '-n', type=int, help='samples to show', default=None)
     parser.add_argument('--width', '-w', type=int, help='sample width in pixels', default=5)
     parser.add_argument('--type', '-t', type=str, help='bar, center, or line', default='line')
     parser.add_argument('--rows', '-r', type=int, help='height in rows', default=1)
-    parser.add_argument('--flow', '-f', type=bool, help='like tail -f', default=False)
-
+    parser.add_argument('--flow', '-f', help='like tail -f', default=False, action='store_true')
 
     args = parser.parse_args()
-    N=100
-    #dat = [i for i in xrange(N)]
-    dat = [random.random() * 2 - 1 for i in xrange(N)]
-    #dat = [(i - 50.) / 100 for i in xrange(N)]
 
-    plt = Plot(N, Z=5, rows=1)
-    #plt.line_plot(dat)
-    #plt.bar_plot(dat)
-    plt.center_plot(dat)
-    plt.output()
+    if not args.flow:
+        data = [
+            int(x)
+            for x in sys.stdin.read().split('\n')
+            if x
+        ]
+        if args.num is None:
+            args.num = len(data)
 
-    print ''
+        plot = Plot(args.num, Z=args.width, rows=args.rows)
+        getattr(plot, args.type + '_plot')(data)
+        plot.output()
+        print ''
+    else:
+        args.num = args.num or 100
+        data = [0] * args.num
 
+        plot = Plot(args.num, Z=args.width, rows=args.rows)
+        while True:
+            getattr(plot, args.type + '_plot')(data)
+            plot.output()
+            try:
+                line = next(sys.stdin)
+            except StopIteration:
+                break
+            sample = float(line.strip())
+            data.pop(0)
+            data.append(sample)
+            plot.wipe()
+            plot.clear()
 
 if __name__ == '__main__':
     main()
