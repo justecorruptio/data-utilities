@@ -40,11 +40,12 @@ class Plot(object):
     def line_plot(self, data, color=(0, 255, 255, 255)):
         w, h = self.size
         N = len(data)
-        M = max(data)
+        m = min(data)
+        M = max(data) - m
         Z = self.Z
 
         line = [
-            (Z * i, h - int(float(v) / M * h) - 1)
+            (Z * i, h - int(float(v - m) / M * h) - 1)
             for i, v in enumerate(data)
         ]
         draw = ImageDraw.Draw(self.img)
@@ -53,17 +54,18 @@ class Plot(object):
     def bar_plot(self, data, color=None):
         w, h = self.size
         N = len(data)
-        M = max(data)
+        m = min(data)
+        M = max(data) - m
         Z = self.Z
 
         draw = ImageDraw.Draw(self.img)
         for i, v in enumerate(data):
-            v = float(v) / M
+            v = float(v - m) / M
             p = int(v * h)
 
             if color is None:
                 c = int(v * 255)
-                k = (c, 255 - c, 0, 255)
+                k = (255 - c, c, 0, 255)
             else:
                 k = color
 
@@ -71,6 +73,26 @@ class Plot(object):
                 (Z * i + 1, h - 1),
                 (Z * i + Z - 1, h - p - 1),
             ], fill=k)
+
+    def center_plot(self, data, color=None):
+        w, h = self.size
+        N = len(data)
+        m = min(data)
+        M = max(max(data), abs(m))
+        Z = self.Z
+
+        base = h / 2
+
+        draw = ImageDraw.Draw(self.img)
+        for i, v in enumerate(data):
+            v = float(v) / M / 2
+            p = int(v * h)
+            c = int((v + .5) * 255)
+
+            draw.rectangle([
+                (Z * i + 1, h - 1 - base),
+                (Z * i + Z - 1, h - 1 - p - base),
+            ], fill=(255 - c, c, 0, 255))
 
     def output(self):
         buff = StringIO.StringIO()
@@ -84,11 +106,13 @@ class Plot(object):
 import random
 N=100
 #dat = [i for i in xrange(N)]
-dat = [random.random() for i in xrange(N)]
+dat = [random.random() * 2 - 1 for i in xrange(N)]
+#dat = [(i - 50.) / 100 for i in xrange(N)]
 
 plt = Plot(N, Z=3, rows=1)
 #plt.line_plot(dat)
-plt.bar_plot(dat)
+#plt.bar_plot(dat)
+plt.center_plot(dat)
 plt.output()
 
 print ''
