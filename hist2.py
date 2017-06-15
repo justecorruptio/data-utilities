@@ -1,5 +1,6 @@
 #!/usr/bin/env python -S
 
+import argparse
 import os, sys, tty, termios, re
 import base64
 import random
@@ -7,22 +8,25 @@ from struct import pack
 
 
 def get_cell_size():
-    termios.tcflush(0, termios.TCIOFLUSH)
-    term_attr = termios.tcgetattr(0)
-    tty.setcbreak(0)
+    fh = open('/dev/tty', 'rw')
+    fd = fh.fileno()
+
+    termios.tcflush(fd, termios.TCIOFLUSH)
+    term_attr = termios.tcgetattr(fd)
+    tty.setcbreak(fd)
 
     sys.stdout.write("\x1b]1337;ReportCellSize\a")
     sys.stdout.flush()
 
     b = ''
     while True:
-        b += sys.stdin.read(1)
+        b += fh.read(1)
         match = re.search(r'(\d+\.\d);(\d+\.\d)', b)
         if match:
             c_h, c_w = match.groups()
             break
 
-    termios.tcsetattr(0, termios.TCSANOW, term_attr)
+    termios.tcsetattr(fd, termios.TCSANOW, term_attr)
 
     return float(c_w), float(c_h)
 
@@ -98,11 +102,19 @@ ENDHDR\n""" % (self.w, self.h)
 
 class Plot(object):
     def __init__(self, N, Z=3, rows=1):
-        w, h = map(int, get_cell_size())
-        h *= rows
-        self.size = (w, h)
+        self.N = N
         self.Z = Z
-        self.pam = PAM((Z*N, h))
+
+        c_w, c_h = map(int, get_cell_size())
+        self.cell_size = (c_w, c_h)
+        self.size = (self.Z * self.N, rows * c_h)
+        self.rows = rows
+        self.cols = (self.size[0] - 1) / c_w + 1
+
+        self.clear()
+
+    def clear(self):
+        self.pam = PAM(self.size)
 
     def line_plot(self, data, color=(0, 255, 255, 255)):
         w, h = self.size
@@ -115,8 +127,6 @@ class Plot(object):
             (Z * i, h - 1 - int(float(v - m) / M * (h - 1)))
             for i, v in enumerate(data)
         ]
-        print data
-        print line
         for i in xrange(1, len(line)):
             self.pam.line([line[i - 1], line[i]], fill=color)
 
@@ -129,7 +139,7 @@ class Plot(object):
 
         for i, v in enumerate(data):
             v = float(v - m) / M
-            p = int(v * h)
+            p = int(v * (h - 1))
 
             if color is None:
                 c = int(v * 255)
@@ -153,7 +163,7 @@ class Plot(object):
 
         for i, v in enumerate(data):
             v = float(v) / M / 2
-            p = int(v * h)
+            p = int(v * (h - 1))
             c = int((v + .5) * 255)
 
             self.pam.rect([
@@ -166,8 +176,24 @@ class Plot(object):
             base64.b64encode(self.pam.as_string()),
         ))
         sys.stdout.flush()
+        sys.stdout.write('\b')
+        sys.stdout.flush()
+
+    def wipe(self):
+        sys.stdout.write('\x1b[%dA\x1b[%dD' % (self.rows - 1, self.cols))
+        sys.stdout.flush()
+
 
 def main():
+    parser = argparse.ArgumentParser(description='iTerm2 sparkline')
+    parser.add_argument('--num', '-n', type=int, help='samples to show', default=100)
+    parser.add_argument('--width', '-w', type=int, help='sample width in pixels', default=5)
+    parser.add_argument('--type', '-t', type=str, help='bar, center, or line', default='line')
+    parser.add_argument('--rows', '-r', type=int, help='height in rows', default=1)
+    parser.add_argument('--flow', '-f', type=bool, help='like tail -f', default=False)
+
+
+    args = parser.parse_args()
     N=100
     #dat = [i for i in xrange(N)]
     dat = [random.random() * 2 - 1 for i in xrange(N)]
@@ -181,4 +207,6 @@ def main():
 
     print ''
 
-main()
+
+if __name__ == '__main__':
+    main()
