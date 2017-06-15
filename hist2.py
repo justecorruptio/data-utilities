@@ -38,7 +38,7 @@ class PAM(object):
 
         self.data = [(0, 0, 0, 0)] * (self.w * self.h)
 
-    def rect(self, pos, fill=(255, 0, 0, 0)):
+    def rect(self, pos, fill=(255, 0, 0, 255)):
         (a, b), (c, d) = pos
         if c < a:
             a, c = c, a
@@ -48,6 +48,38 @@ class PAM(object):
         for i in xrange(a, c + 1):
             for j in xrange(b, d + 1):
                 self.data[j * self.w + i] = fill
+
+    def line(self, pos, fill=(255, 0, 0, 255)):
+        (a, b), (c, d) = pos
+        dx = c - a
+        dy = d - b
+
+        steep = abs(dy) > abs(dx)
+        if steep:
+            a, b = b, a
+            c, d = d, c
+
+        swapped = False
+        if a > c:
+            a, c = c, a
+            b, d = d, b
+
+        dx = c - a
+        dy = d - b
+
+        err = int(dx / 2.0)
+        s = 1 if b < d else -1
+
+        j = b
+        for i in xrange(a, c):
+            if steep:
+                self.data[i * self.w + j] = fill
+            else:
+                self.data[j * self.w + i] = fill
+            err -= abs(dy)
+            if err < 0:
+                j += s
+                err += dx
 
     def as_string(self):
         s = """P7
@@ -80,11 +112,13 @@ class Plot(object):
         Z = self.Z
 
         line = [
-            (Z * i, h - int(float(v - m) / M * h) - 1)
+            (Z * i, h - 1 - int(float(v - m) / M * (h - 1)))
             for i, v in enumerate(data)
         ]
-        draw = ImageDraw.Draw(self.img)
-        draw.line(line, fill=color)
+        print data
+        print line
+        for i in xrange(1, len(line)):
+            self.pam.line([line[i - 1], line[i]], fill=color)
 
     def bar_plot(self, data, color=None):
         w, h = self.size
@@ -147,13 +181,4 @@ def main():
 
     print ''
 
-#import cStringIO, cProfile, pstats
-#pr = cProfile.Profile()
-#pr.enable()
 main()
-#pr.disable()
-#s = cStringIO.StringIO()
-#sortby = 'cumulative'
-#ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-#ps.print_stats()
-#print s.getvalue()
