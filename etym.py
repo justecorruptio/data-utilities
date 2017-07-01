@@ -38,6 +38,7 @@ txt = re.sub(r'</a>', '\033[39m', txt)
 txt = re.sub(r'<dt[^>]*>(.*?)</dt>', r'\1\n', txt)
 txt = re.sub(r'<dd[^>]*>(.*?)</dd>', r'\1\n\n', txt)
 txt = re.sub(r'<span class="foreign">(.*?)</span>', '\033[3m\\1\033[23m', txt)
+txt = re.sub(r'<b>(.*?)</b>', '\033[1m\\1\033[22m', txt)
 txt = re.sub(r'<blockquote>(.*?)</blockquote>',
     '\n\n    \033[38;5;244m\\1\033[39m\n\n', txt)
 
