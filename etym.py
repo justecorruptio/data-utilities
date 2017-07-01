@@ -39,8 +39,15 @@ txt = re.sub(r'<dt[^>]*>(.*?)</dt>', r'\1\n', txt)
 txt = re.sub(r'<dd[^>]*>(.*?)</dd>', r'\1\n\n', txt)
 txt = re.sub(r'<span class="foreign">(.*?)</span>', '\033[3m\\1\033[23m', txt)
 txt = re.sub(r'<b>(.*?)</b>', '\033[1m\\1\033[22m', txt)
-txt = re.sub(r'<blockquote>(.*?)</blockquote>',
-    '\n\n    \033[38;5;244m\\1\033[39m\n\n', txt)
+
+def blockquote(match):
+    txt = match.group(1)
+    txt = re.sub(r'<br>', '\n    ', txt, flags=re.I)
+    txt = re.sub(r'<hr>', '--\n    ', txt, flags=re.I)
+    txt = '\n\n    \033[38;5;244m%s\033[39m\n\n' % (txt,)
+    return txt
+
+txt = re.sub(r'<blockquote>(.*?)</blockquote>', blockquote, txt)
 
 txt = re.sub(r'\x0d', '', txt)
 txt = re.sub(r'\n{3,}', '\n\n', txt)
@@ -48,6 +55,7 @@ txt = re.sub(r'\n{3,}', '\n\n', txt)
 txt = HTMLParser.HTMLParser().unescape(txt)
 
 txt = re.sub(r'<br>', '\n', txt, flags=re.I)
+txt = re.sub(r'<hr>', '--\n', txt, flags=re.I)
 txt = re.sub(r' *\n|\n *', '\n', txt)
 
 def _len(s):
