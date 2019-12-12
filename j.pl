@@ -82,18 +82,13 @@ my $OPS = {
     },
     'o' => sub {
         my $cols = $_[0];
-        if ($cols eq "0") {
-            return q(tr '\n' '\t');
+        $cols ||= 9999999;
+        q(perl -lane'BEGIN{$c=) .$cols. q(}push @a, @F;
+        while(@a >= $c){
+            @b = ();push @b, shift @a for 1..$c;
+            print join("\t", @b);
         }
-        else {
-            $cols ||= 8;
-            q(perl -lane'BEGIN{$c=) .$cols. q(}push @a, @F;
-            while(@a >= $c){
-                @b = ();push @b, shift @a for 1..$c;
-                print join("\t", @b);
-            }
-            END{print join "\t", @a if @a;}');
-        }
+        END{print join "\t", @a if @a;}');
     },
     ',' => sub {
         q(perl -lpe 's/\t/,/g');
